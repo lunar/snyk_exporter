@@ -140,6 +140,7 @@ func collect(client *client, organization string) error {
 	organizationID := projects.Org.ID
 
 	for _, project := range projects.Projects {
+		start := time.Now()
 		issues, err := client.getIssues(organizationID, project.ID)
 		if err != nil {
 			log.Errorf("Failed to get issues for organization %s (%s) and project %s (%s): %v", organization, organizationID, project.Name, project.ID, err)
@@ -147,7 +148,8 @@ func collect(client *client, organization string) error {
 		}
 		results := aggregateVulnerabilities(issues.Issues)
 		setGauge(organization, project.Name, results)
-		log.Debugf("Collected data for %s %s", project.ID, project.Name)
+		duration := time.Since(start)
+		log.Debugf("Collected data in %v for %s %s", duration, project.ID, project.Name)
 	}
 	return nil
 }
