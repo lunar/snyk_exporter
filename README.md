@@ -58,6 +58,32 @@ snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="high
 snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="low",type="Sandbox (chroot) Escape"} 2.0
 ```
 
+# Build
+
+The exporter can be build using the standard Go tool chain if you have it available.
+
+```
+go build
+```
+
+You can build inside a docker imagee as well.
+This produces a `snyk_exporter` image that can run with the binary as entry point.
+
+```
+docker build -t snyk_exporter .
+```
+
+This is useful if the exporter is to be depoyled in Kubernetes or other dockerized environments.
+
+Here is an example of running the exporter locally.
+
+```
+$ docker run -p9532:9532 snyk_exporter --snyk.api-token <api-token>
+time="2019-01-10T19:57:00Z" level=info msg="Starting Snyk exporter for organization 'squad-nasa'" source="main.go:53"
+time="2019-01-10T19:57:01Z" level=info msg="Listening on :9532" source="main.go:63"
+time="2019-01-10T19:57:01Z" level=info msg="Running Snyk API scraper..." source="main.go:94"
+```
+
 # Development
 
 Run builds and tests with the standard Go tool chain.
