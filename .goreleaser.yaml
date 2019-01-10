@@ -2,6 +2,14 @@ builds:
 - env:
   - CGO_ENABLED=0
 
+dockers:
+- dockerfile: Dockerfile-goreleaser
+  image_templates:
+  - "quay.io/lunarway/snyk_exporter:latest"
+  - "quay.io/lunarway/snyk_exporter:v{{ .Major }}"
+  - "quay.io/lunarway/snyk_exporter:v{{ .Major }}.{{ .Minor }}"
+  - "quay.io/lunarway/snyk_exporter:v{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+
 archive:
   format: binary
   name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
