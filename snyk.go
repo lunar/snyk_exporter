@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 
 	"github.com/prometheus/common/log"
 )
@@ -25,14 +26,6 @@ func (c *client) getOrganizations() (orgsResponse, error) {
 	if err != nil {
 		return orgsResponse{}, err
 	}
-	if response.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Errorf("read body failed: %v", err)
-			body = []byte("failed to read body")
-		}
-		log.Errorf("request not OK: %s: body: %s", response.Status, body)
-	}
 	var orgs orgsResponse
 	err = json.NewDecoder(response.Body).Decode(&orgs)
 	if err != nil {
@@ -49,14 +42,6 @@ func (c *client) getProjects(organization string) (projectsResponse, error) {
 	response, err := c.do(req)
 	if err != nil {
 		return projectsResponse{}, err
-	}
-	if response.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Errorf("read body failed: %v", err)
-			body = []byte("failed to read body")
-		}
-		log.Errorf("request not OK: %s: body: %s", response.Status, body)
 	}
 	var projects projectsResponse
 	err = json.NewDecoder(response.Body).Decode(&projects)
@@ -87,14 +72,6 @@ func (c *client) getIssues(organizationID, projectID string) (issuesResponse, er
 	if err != nil {
 		return issuesResponse{}, err
 	}
-	if response.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Errorf("read body failed: %v", err)
-			body = []byte("failed to read body")
-		}
-		return issuesResponse{}, fmt.Errorf("request not OK: %s: body: %s", response.Status, body)
-	}
 	var issues issuesResponse
 	err = json.NewDecoder(response.Body).Decode(&issues)
 	if err != nil {
@@ -105,7 +82,23 @@ func (c *client) getIssues(organizationID, projectID string) (issuesResponse, er
 
 func (c *client) do(req *http.Request) (*http.Response, error) {
 	req.Header.Add("Authorization", fmt.Sprintf("token %s", c.token))
-	return c.httpClient.Do(req)
+	response, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if response.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Errorf("read body failed: %v", err)
+			body = []byte("failed to read body")
+		}
+		requestDump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Debugf("Failed request dump: %s", requestDump)
+		}
+		return nil, fmt.Errorf("request not OK: %s: body: %s", response.Status, body)
+	}
+	return response, nil
 }
 
 type orgsResponse struct {
