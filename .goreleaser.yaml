@@ -27,7 +27,6 @@ snapshot:
 
 release:
   name_template: "v{{.Version}}"
-  prerelease: auto
 
 changelog:
   sort: asc
