@@ -2,9 +2,20 @@
 
 [![Build Status](https://travis-ci.org/lunarway/snyk_exporter.svg?branch=master)](https://travis-ci.org/lunarway/snyk_exporter)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lunarway/snyk_exporter)](https://goreportcard.com/report/github.com/lunarway/snyk_exporter)
+[![Docker Repository on Quay](https://quay.io/repository/lunarway/snyk_exporter/status "Docker Repository on Quay")](https://quay.io/repository/lunarway/snyk_exporter)
 
 Prometheus exporter for [Snyk](https://snyk.io/) written in Go.
 Allows for exporting scanning data into Prometheus by scraping the Snyk HTTP API.
+
+# Installation
+
+Several pre-compiled binaries are available from the [releases page](https://github.com/lunarway/snyk_exporter/releases).
+
+A docker image is also available on our Quay.io registry.
+
+```
+docker run quay.io/lunarway/snyk_exporter --snyk.api-token <api-token>
+```
 
 # Usage
 
