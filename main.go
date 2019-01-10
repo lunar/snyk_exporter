@@ -44,7 +44,7 @@ func main() {
 	snykOrganizations := flags.Flag("snyk.organization", "Snyk organization to scrape projects from (can be repeated for multiple organizations)").Required().Strings()
 	requestTimeout := flags.Flag("snyk.timeout", "Timeout for requests against Snyk API").Default("10").Int()
 	listenAddress := flags.Flag("web.listen-address", "Address on which to expose metrics.").Default(":9532").String()
-	log.AddFlags(kingpin.CommandLine)
+	log.AddFlags(flags)
 	flags.HelpFlag.Short('h')
 	flags.Version(version)
 	kingpin.MustParse(flags.Parse(os.Args[1:]))
