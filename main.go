@@ -32,6 +32,10 @@ var (
 	)
 )
 
+var (
+	version = ""
+)
+
 func main() {
 	flags := kingpin.New("snyk_exporter", "Snyk exporter for Prometheus. Provide your Snyk API token and the organization(s) to scrape to expose Prometheus metrics.")
 	snykAPIURL := flags.Flag("snyk.api-url", "Snyk API URL").Default("https://snyk.io/api/v1").String()
@@ -42,6 +46,7 @@ func main() {
 	listenAddress := flags.Flag("web.listen-address", "Address on which to expose metrics.").Default(":9532").String()
 	log.AddFlags(kingpin.CommandLine)
 	flags.HelpFlag.Short('h')
+	flags.Version(version)
 	kingpin.MustParse(flags.Parse(os.Args[1:]))
 
 	log.Infof("Starting Snyk exporter for organization '%s'", strings.Join(*snykOrganizations, ","))
