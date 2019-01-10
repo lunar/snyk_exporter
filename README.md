@@ -86,6 +86,7 @@ time="2019-01-10T19:57:01Z" level=info msg="Running Snyk API scraper..." source=
 
 # Development
 
+The project uses Go modules so you need Go version >=1.11 to run it.
 Run builds and tests with the standard Go tool chain.
 
 ```go
