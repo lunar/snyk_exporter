@@ -1,5 +1,7 @@
 # Snyk exporter
 
+[![Build Status](https://travis-ci.org/lunarway/snyk_exporter.svg?branch=master)](https://travis-ci.org/lunarway/snyk_exporter)
+
 Prometheus exporter for [Snyk](https://snyk.io/) written in Go.
 Allows for exporting scanning data into Prometheus by scraping the Snyk HTTP API.
 
