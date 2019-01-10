@@ -16,6 +16,31 @@ type client struct {
 	baseURL    string
 }
 
+func (c *client) getOrganizations() (orgsResponse, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/orgs", c.baseURL), nil)
+	if err != nil {
+		return orgsResponse{}, err
+	}
+	response, err := c.do(req)
+	if err != nil {
+		return orgsResponse{}, err
+	}
+	if response.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Errorf("read body failed: %v", err)
+			body = []byte("failed to read body")
+		}
+		log.Errorf("request not OK: %s: body: %s", response.Status, body)
+	}
+	var orgs orgsResponse
+	err = json.NewDecoder(response.Body).Decode(&orgs)
+	if err != nil {
+		return orgsResponse{}, err
+	}
+	return orgs, nil
+}
+
 func (c *client) getProjects(organization string) (projectsResponse, error) {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/org/%s/projects", c.baseURL, organization), nil)
 	if err != nil {
@@ -83,12 +108,25 @@ func (c *client) do(req *http.Request) (*http.Response, error) {
 	return c.httpClient.Do(req)
 }
 
-type projectsResponse struct {
-	Org      org       `json:"org,omitempty"`
-	Projects []project `json:"projects,omitempty"`
+type orgsResponse struct {
+	Orgs []org `json:"orgs,omitempty"`
 }
 
 type org struct {
+	ID    string `json:"id,omitempty"`
+	Name  string `json:"name,omitempty"`
+	Group *struct {
+		Name string `json:"name,omitempty"`
+		ID   string `json:"id,omitempty"`
+	} `json:"group,omitempty"`
+}
+
+type projectsResponse struct {
+	Org      projectOrg `json:"org,omitempty"`
+	Projects []project  `json:"projects,omitempty"`
+}
+
+type projectOrg struct {
 	ID   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
 }

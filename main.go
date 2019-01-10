@@ -41,7 +41,7 @@ func main() {
 	snykAPIURL := flags.Flag("snyk.api-url", "Snyk API URL").Default("https://snyk.io/api/v1").String()
 	snykAPIToken := flags.Flag("snyk.api-token", "Snyk API token").Required().String()
 	snykInterval := flags.Flag("snyk.interval", "Polling interval for requesting data from Snyk API in seconds").Short('i').Default("60").Int()
-	snykOrganizations := flags.Flag("snyk.organization", "Snyk organization to scrape projects from (can be repeated for multiple organizations)").Required().Strings()
+	snykOrganizations := flags.Flag("snyk.organization", "Snyk organization to scrape projects from (can be repeated for multiple organizations)").Strings()
 	requestTimeout := flags.Flag("snyk.timeout", "Timeout for requests against Snyk API").Default("10").Int()
 	listenAddress := flags.Flag("web.listen-address", "Address on which to expose metrics.").Default(":9532").String()
 	log.AddFlags(flags)
@@ -49,7 +49,11 @@ func main() {
 	flags.Version(version)
 	kingpin.MustParse(flags.Parse(os.Args[1:]))
 
-	log.Infof("Starting Snyk exporter for organization '%s'", strings.Join(*snykOrganizations, ","))
+	if len(*snykOrganizations) != 0 {
+		log.Infof("Starting Snyk exporter for organization '%s'", strings.Join(*snykOrganizations, ","))
+	} else {
+		log.Info("Starting Snyk exporter for all organization for token")
+	}
 
 	prometheus.MustRegister(vulnerabilityGauge)
 	http.Handle("/metrics", promhttp.Handler())
@@ -95,6 +99,14 @@ func runAPIPolling(done chan error, url, token string, organizations []string, r
 		token:   token,
 		baseURL: url,
 	}
+	if len(organizations) == 0 {
+		var err error
+		organizations, err = getOrganizations(&client)
+		if err != nil {
+			done <- err
+			return
+		}
+	}
 	for {
 		for _, organization := range organizations {
 			log.Debugf("Collecting for organization '%s'", organization)
@@ -106,6 +118,18 @@ func runAPIPolling(done chan error, url, token string, organizations []string, r
 		}
 		time.Sleep(requestInterval)
 	}
+}
+
+func getOrganizations(client *client) ([]string, error) {
+	organizations, err := client.getOrganizations()
+	if err != nil {
+		return nil, err
+	}
+	organizationNames := make([]string, len(organizations.Orgs))
+	for i, org := range organizations.Orgs {
+		organizationNames[i] = org.Name
+	}
+	return organizationNames, nil
 }
 
 func collect(client *client, organization string) error {
