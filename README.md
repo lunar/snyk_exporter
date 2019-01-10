@@ -28,7 +28,7 @@ Flags:
                           Snyk API URL
       --snyk.api-token=SNYK.API-TOKEN
                           Snyk API token
-  -i, --snyk.interval=10  Polling interval for requesting data from Snyk API in seconds
+  -i, --snyk.interval=60  Polling interval for requesting data from Snyk API in seconds
       --snyk.organization=SNYK.ORGANIZATION ...
                           Snyk organization to scrape projects from (can be repeated for multiple organizations)
       --snyk.timeout=10   Timeout for requests against Snyk API
@@ -38,7 +38,7 @@ Flags:
 
 # Design
 
-The exporter starts a long-running go routine on startup that scrapes the Snyk API with a fixed interval (default every `10` seconds).
+The exporter starts a long-running go routine on startup that scrapes the Snyk API with a fixed interval (default every `60` seconds).
 The interval can be configured as needed.
 
 The API results are aggregated and recorded on the `snyk_vulnerabiilities_total` metric with the following labels:
