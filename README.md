@@ -97,7 +97,7 @@ time="2019-01-10T19:57:01Z" level=info msg="Running Snyk API scraper..." source=
 
 # Deployment
 
-To deploy the exporter in Kubernetes, you can find a simple Kubernetes deployment and secret yaml in the `examples` folder. You have to add your snyk token in the `secrets.yaml` and/or the snyk organizations that you want to get metrics from in the args section of the `deployment.yaml`. If you don't specify a snyk-organization, the exporter will scrape all organizations the key provides access to. The examples assumes that you have a namespace in kubernetes named: `monitoring`. 
+To deploy the exporter in Kubernetes, you can find a simple Kubernetes deployment and secret yaml in the `examples` folder. You have to add your snyk token in the `secrets.yaml` and/or the snyk organizations that you want to get metrics from in the args section of the `deployment.yaml`. If you don't specify a snyk-organization, the exporter will scrape all organizations the token provides access to. The examples assumes that you have a namespace in kubernetes named: `monitoring`. 
 
 It further assumes that you have [kubernetes service discovery](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config) configured for you Prometheus instance and a target that will gather metrics from pods, similar to this: 
 
@@ -123,7 +123,7 @@ It further assumes that you have [kubernetes service discovery](https://promethe
     regex: __meta_kubernetes_pod_label_(.+)
 ```
 
-To deploy it to your kubernetes cluster run the following command:
+To deploy it to your kubernetes cluster run the following commands:
 
 ```
 kubectl apply -f examples/secrets.yaml
