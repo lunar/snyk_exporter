@@ -25,16 +25,16 @@ Get your through the [Snyk account settings](https://app.snyk.io/account/).
 It exposes prometheus metrics on `/metrics` on port `9532` (can be configured).
 
 ```
-snyk_exporter --snyk.api-token <api-token> --snyk.organization nasa
+snyk_exporter --snyk.api-token <api-token>
 ```
 
 See all configuration options with the `--help` flag
 
 ```
 $ snyk_exporter --help
-usage: snyk_exporter --snyk.api-token=SNYK.API-TOKEN --snyk.organization=SNYK.ORGANIZATION [<flags>]
+usage: snyk_exporter --snyk.api-token=SNYK.API-TOKEN [<flags>]
 
-Snyk exporter for Prometheus. Provide your Snyk API token and the organization(s) to scrape to expose Prometheus metrics.
+Snyk exporter for Prometheus. Provide your Snyk API token and optionally the organization id(s) to scrape to expose Prometheus metrics.
 
 Flags:
   -h, --help              Show context-sensitive help (also try --help-long and --help-man).
@@ -44,10 +44,14 @@ Flags:
                           Snyk API token
   -i, --snyk.interval=60  Polling interval for requesting data from Snyk API in seconds
       --snyk.organization=SNYK.ORGANIZATION ...
-                          Snyk organization to scrape projects from (can be repeated for multiple organizations)
+                          Snyk organization ID to scrape projects from (can be repeated for multiple organizations)
       --snyk.timeout=10   Timeout for requests against Snyk API
       --web.listen-address=":9532"
                           Address on which to expose metrics.
+      --log.level="info"  Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal]
+      --log.format="logger:stderr"
+                          Set the log target and format. Example: "logger:syslog?appname=bob&local=7" or "logger:stdout?json=true"
+      --version           Show application version.
 ```
 
 # Design
@@ -60,13 +64,13 @@ The API results are aggregated and recorded on the `snyk_vulnerabiilities_total`
 - `organization` - The organization where the vulnerable project exists
 - `project` - The project with a vulnerability
 - `severity` - The severity of the vulnerability, can be `high`, `medium` and `low`
-- `type` - The type of the vulnerability, e.g. `Denial os Service (DoS)`. Can be the CVE if the vulnerability is not named by Snyk
+- `issue_title` - The issue title of the vulnerability, e.g. `Denial os Service (DoS)`. Can be the CVE if the vulnerability is not named by Snyk
 
 Here is an example.
 
 ```
-snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="high",type="Privilege Escalation"} 1.0
-snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="low",type="Sandbox (chroot) Escape"} 2.0
+snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="high",issue_title="Privilege Escalation"} 1.0
+snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="low",issue_title="Sandbox (chroot) Escape"} 2.0
 ```
 
 # Build
@@ -90,9 +94,9 @@ Here is an example of running the exporter locally.
 
 ```
 $ docker run -p9532:9532 snyk_exporter --snyk.api-token <api-token>
-time="2019-01-10T19:57:00Z" level=info msg="Starting Snyk exporter for organization 'squad-nasa'" source="main.go:53"
-time="2019-01-10T19:57:01Z" level=info msg="Listening on :9532" source="main.go:63"
-time="2019-01-10T19:57:01Z" level=info msg="Running Snyk API scraper..." source="main.go:94"
+time="2019-01-11T09:42:34Z" level=info msg="Starting Snyk exporter for all organization for token" source="main.go:55"
+time="2019-01-11T09:42:34Z" level=info msg="Listening on :9532" source="main.go:63"
+time="2019-01-11T09:42:35Z" level=info msg="Running Snyk API scraper for organizations: <omitted>" source="main.go:106"
 ```
 
 # Development
