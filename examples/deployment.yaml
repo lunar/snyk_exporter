@@ -20,8 +20,7 @@ spec:
       containers:
       - name: snyk-exporter
         image: quay.io/lunarway/snyk_exporter:v1.0.0
-        args: ["--snyk.api-token", "YOUR_API_TOKEN", "--snyk.organization", "YOU_ORGANIZATION"]
+        args: ["--snyk.api-token", "YOUR_API_TOKEN", "--snyk.organization", "YOUR_ORGANIZATION"]
         ports:
         - name: scrape
           containerPort: 9532
-        
