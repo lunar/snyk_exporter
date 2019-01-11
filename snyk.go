@@ -93,7 +93,9 @@ func (c *client) do(req *http.Request) (*http.Response, error) {
 			body = []byte("failed to read body")
 		}
 		requestDump, err := httputil.DumpRequestOut(req, true)
-		if err == nil {
+		if err != nil {
+			log.Debugf("Failed to dump request for logging")
+		} else {
 			log.Debugf("Failed request dump: %s", requestDump)
 		}
 		return nil, fmt.Errorf("request not OK: %s: body: %s", response.Status, body)
