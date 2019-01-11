@@ -17,7 +17,7 @@ import (
 
 const (
 	projectLabel      = "project"
-	typeLabel         = "type"
+	issueTitleLabel   = "issue_title"
 	severityLabel     = "severity"
 	organizationLabel = "organization"
 )
@@ -28,7 +28,7 @@ var (
 			Name: "snyk_vulnerabilities_total",
 			Help: "Gauge of Snyk vulnerabilities",
 		},
-		[]string{organizationLabel, projectLabel, typeLabel, severityLabel},
+		[]string{organizationLabel, projectLabel, issueTitleLabel, severityLabel},
 	)
 )
 
