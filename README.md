@@ -99,6 +99,41 @@ time="2019-01-11T09:42:34Z" level=info msg="Listening on :9532" source="main.go:
 time="2019-01-11T09:42:35Z" level=info msg="Running Snyk API scraper for organizations: <omitted>" source="main.go:106"
 ```
 
+# Deployment
+
+To deploy the exporter in Kubernetes, you can find a simple Kubernetes deployment and secret yaml in the `examples` folder. You have to add your snyk token in the `secrets.yaml` and/or the snyk organizations that you want to get metrics from in the args section of the `deployment.yaml`. If you don't specify a snyk-organization, the exporter will scrape all organizations the token provides access to. The examples assumes that you have a namespace in kubernetes named: `monitoring`. 
+
+It further assumes that you have [kubernetes service discovery](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config) configured for you Prometheus instance and a target that will gather metrics from pods, similar to this: 
+
+```
+- job_name: 'kubernetes-pods'
+  kubernetes_sd_configs:
+  - role: pod
+
+  relabel_configs:
+  - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+    action: keep
+    regex: true
+  - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+    action: replace
+    target_label: __metrics_path__
+    regex: (.+)
+  - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+    action: replace
+    regex: (.+):(?:\d+);(\d+)
+    replacement: ${1}:${2}
+    target_label: __address__
+  - action: labelmap
+    regex: __meta_kubernetes_pod_label_(.+)
+```
+
+To deploy it to your kubernetes cluster run the following commands:
+
+```
+kubectl apply -f examples/secrets.yaml
+kubectl apply -f examples/deployment.yaml
+```
+
 # Development
 
 The project uses Go modules so you need Go version >=1.11 to run it.
