@@ -41,7 +41,7 @@ func main() {
 	snykAPIURL := flags.Flag("snyk.api-url", "Snyk API URL").Default("https://snyk.io/api/v1").String()
 	snykAPIToken := flags.Flag("snyk.api-token", "Snyk API token").Required().String()
 	snykInterval := flags.Flag("snyk.interval", "Polling interval for requesting data from Snyk API in seconds").Short('i').Default("60").Int()
-	snykOrganizations := flags.Flag("snyk.organization", "Snyk organization to scrape projects from (can be repeated for multiple organizations)").Strings()
+	snykOrganizations := flags.Flag("snyk.organization", "Snyk organization ID to scrape projects from (can be repeated for multiple organizations)").Strings()
 	requestTimeout := flags.Flag("snyk.timeout", "Timeout for requests against Snyk API").Default("10").Int()
 	listenAddress := flags.Flag("web.listen-address", "Address on which to expose metrics.").Default(":9532").String()
 	log.AddFlags(flags)
@@ -90,8 +90,7 @@ func secondDuration(seconds int) time.Duration {
 	return time.Duration(seconds) * time.Second
 }
 
-func runAPIPolling(done chan error, url, token string, organizations []string, requestInterval, requestTimeout time.Duration) {
-	log.Info("Running Snyk API scraper...")
+func runAPIPolling(done chan error, url, token string, organizationIDs []string, requestInterval, requestTimeout time.Duration) {
 	client := client{
 		httpClient: &http.Client{
 			Timeout: requestTimeout,
@@ -99,17 +98,15 @@ func runAPIPolling(done chan error, url, token string, organizations []string, r
 		token:   token,
 		baseURL: url,
 	}
-	if len(organizations) == 0 {
-		var err error
-		organizations, err = getOrganizations(&client)
-		if err != nil {
-			done <- err
-			return
-		}
+	organizations, err := getOrganizations(&client, organizationIDs)
+	if err != nil {
+		done <- err
+		return
 	}
+	log.Infof("Running Snyk API scraper for organizations: %v", strings.Join(organizationNames(organizations), ", "))
 	for {
 		for _, organization := range organizations {
-			log.Debugf("Collecting for organization '%s'", organization)
+			log.Debugf("Collecting for organization '%s'", organization.Name)
 			err := collect(&client, organization)
 			if err != nil {
 				done <- err
@@ -120,34 +117,56 @@ func runAPIPolling(done chan error, url, token string, organizations []string, r
 	}
 }
 
-func getOrganizations(client *client) ([]string, error) {
-	organizations, err := client.getOrganizations()
+func organizationNames(orgs []org) []string {
+	var names []string
+	for _, org := range orgs {
+		names = append(names, org.Name)
+	}
+	return names
+}
+
+func getOrganizations(client *client, organizationIDs []string) ([]org, error) {
+	orgsResponse, err := client.getOrganizations()
 	if err != nil {
 		return nil, err
 	}
-	organizationNames := make([]string, len(organizations.Orgs))
-	for i, org := range organizations.Orgs {
-		organizationNames[i] = org.Name
+	organizations := orgsResponse.Orgs
+	if len(organizationIDs) != 0 {
+		organizations = filterByIDs(orgsResponse.Orgs, organizationIDs)
+		if len(organizations) == 0 {
+			return nil, fmt.Errorf("no organizations match the filter: '%v'", strings.Join(organizationIDs, ","))
+		}
 	}
-	return organizationNames, nil
+	return organizations, nil
 }
 
-func collect(client *client, organization string) error {
-	projects, err := client.getProjects(organization)
+func filterByIDs(organizations []org, ids []string) []org {
+	var filtered []org
+	for i := range organizations {
+		for _, id := range ids {
+			if organizations[i].ID == id {
+				filtered = append(filtered, organizations[i])
+			}
+		}
+	}
+	return filtered
+}
+
+func collect(client *client, organization org) error {
+	projects, err := client.getProjects(organization.ID)
 	if err != nil {
 		return err
 	}
-	organizationID := projects.Org.ID
 
 	for _, project := range projects.Projects {
 		start := time.Now()
-		issues, err := client.getIssues(organizationID, project.ID)
+		issues, err := client.getIssues(organization.ID, project.ID)
 		if err != nil {
-			log.Errorf("Failed to get issues for organization %s (%s) and project %s (%s): %v", organization, organizationID, project.Name, project.ID, err)
+			log.Errorf("Failed to get issues for organization %s (%s) and project %s (%s): %v", organization.Name, organization.ID, project.Name, project.ID, err)
 			continue
 		}
 		results := aggregateVulnerabilities(issues.Issues)
-		setGauge(organization, project.Name, results)
+		setGauge(organization.Name, project.Name, results)
 		duration := time.Since(start)
 		log.Debugf("Collected data in %v for %s %s", duration, project.ID, project.Name)
 	}
