@@ -58,6 +58,10 @@ func main() {
 	prometheus.MustRegister(vulnerabilityGauge)
 	http.Handle("/metrics", promhttp.Handler())
 
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "true")
+	})
+
 	done := make(chan error, 1)
 	go func() {
 		log.Infof("Listening on %s", *listenAddress)
