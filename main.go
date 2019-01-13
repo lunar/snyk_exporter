@@ -8,6 +8,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -30,6 +31,10 @@ var (
 		},
 		[]string{organizationLabel, projectLabel, issueTitleLabel, severityLabel},
 	)
+)
+
+var (
+	ready = false
 )
 
 var (
@@ -60,6 +65,10 @@ func main() {
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "true")
+	})
+
+	http.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "%q", strconv.FormatBool(ready))
 	})
 
 	done := make(chan error, 1)
@@ -112,6 +121,8 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 		for _, organization := range organizations {
 			log.Debugf("Collecting for organization '%s'", organization.Name)
 			err := collect(&client, organization)
+			log.Infof("Done collecting for organization '%s'", organization.Name)
+			ready = true
 			if err != nil {
 				done <- err
 				return
