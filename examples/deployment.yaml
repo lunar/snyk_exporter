@@ -27,6 +27,17 @@ spec:
             secretKeyRef:
               key: snyk.api-token
               name: snyk-exporter
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9532
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 9532
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          failureThreshold: 5
         ports:
         - name: scrape
           containerPort: 9532
