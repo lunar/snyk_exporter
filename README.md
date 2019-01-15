@@ -54,6 +54,16 @@ Flags:
       --version           Show application version.
 ```
 
+It is possible to use a file to pass arguments to the exporter. 
+For example:
+```
+ echo --snyk.api-token=<>\n > args
+```
+And run the exporter using:
+```
+./snyk-exporter @args
+```
+
 # Design
 
 The exporter starts a long-running go routine on startup that scrapes the Snyk API with a fixed interval (default every `60` seconds).
