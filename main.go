@@ -81,7 +81,7 @@ func main() {
 	reason := <-done
 	if reason != nil {
 		log.Errorf("Snyk exporter exited due to error: %v", reason)
-		return
+		os.Exit(1)
 	}
 	log.Infof("Snyk exporter exited with exit 0")
 }
