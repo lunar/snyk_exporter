@@ -137,11 +137,11 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 				done <- err
 				return
 			}
-
-			readyMutex.Lock()
-			defer readyMutex.Unlock()
-			ready = true
 		}
+
+		readyMutex.Lock()
+		ready = true
+		readyMutex.Unlock()
 		time.Sleep(requestInterval)
 	}
 }
