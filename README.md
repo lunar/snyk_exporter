@@ -1,6 +1,6 @@
 # Snyk exporter
 
-[![Build Status](https://travis-ci.org/lunarway/snyk_exporter.svg?branch=master)](https://travis-ci.org/lunarway/snyk_exporter)
+[![Build Status](https://travis-ci.com/lunarway/snyk_exporter.svg?branch=master)](https://travis-ci.com/lunarway/snyk_exporter)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lunarway/snyk_exporter)](https://goreportcard.com/report/github.com/lunarway/snyk_exporter)
 [![Docker Repository on Quay](https://quay.io/repository/lunarway/snyk_exporter/status "Docker Repository on Quay")](https://quay.io/repository/lunarway/snyk_exporter)
 
@@ -54,7 +54,7 @@ Flags:
       --version           Show application version.
 ```
 
-It is possible to use a file to pass arguments to the exporter. 
+It is possible to use a file to pass arguments to the exporter.
 For example:
 ```
  echo --snyk.api-token=<>\n > args
@@ -111,9 +111,9 @@ time="2019-01-11T09:42:35Z" level=info msg="Running Snyk API scraper for organiz
 
 # Deployment
 
-To deploy the exporter in Kubernetes, you can find a simple Kubernetes deployment and secret yaml in the `examples` folder. You have to add your snyk token in the `secrets.yaml` and/or the snyk organizations that you want to get metrics from in the args section of the `deployment.yaml`. If you don't specify a snyk-organization, the exporter will scrape all organizations the token provides access to. The examples assumes that you have a namespace in kubernetes named: `monitoring`. 
+To deploy the exporter in Kubernetes, you can find a simple Kubernetes deployment and secret yaml in the `examples` folder. You have to add your snyk token in the `secrets.yaml` and/or the snyk organizations that you want to get metrics from in the args section of the `deployment.yaml`. If you don't specify a snyk-organization, the exporter will scrape all organizations the token provides access to. The examples assumes that you have a namespace in kubernetes named: `monitoring`.
 
-It further assumes that you have [kubernetes service discovery](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config) configured for you Prometheus instance and a target that will gather metrics from pods, similar to this: 
+It further assumes that you have [kubernetes service discovery](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config) configured for you Prometheus instance and a target that will gather metrics from pods, similar to this:
 
 ```
 - job_name: 'kubernetes-pods'
