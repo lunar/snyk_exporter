@@ -144,6 +144,10 @@ kubectl apply -f examples/secrets.yaml
 kubectl apply -f examples/deployment.yaml
 ```
 
+The exporter expose http endpoints that can be used by kubernetes probes:
+* `/healthz` - used for liveness probe, always returns true
+* `/ready` - used for readiness probe, return true after the first scrape completed.
+
 # Development
 
 The project uses Go modules so you need Go version >=1.11 to run it.
