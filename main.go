@@ -8,6 +8,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"strconv"
+	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -30,6 +32,11 @@ var (
 		},
 		[]string{organizationLabel, projectLabel, issueTitleLabel, severityLabel},
 	)
+)
+
+var (
+	ready = false
+	readyMutex = &sync.RWMutex{}
 )
 
 var (
@@ -57,6 +64,23 @@ func main() {
 
 	prometheus.MustRegister(vulnerabilityGauge)
 	http.Handle("/metrics", promhttp.Handler())
+
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "healthy")
+	})
+
+	http.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+		readyMutex.RLock()
+		defer readyMutex.RUnlock()
+
+		if ready == true {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			w.WriteHeader(http.StatusServiceUnavailable )
+		}
+
+		w.Write([]byte(strconv.FormatBool(ready)))
+	})
 
 	done := make(chan error, 1)
 	go func() {
@@ -108,11 +132,16 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 		for _, organization := range organizations {
 			log.Debugf("Collecting for organization '%s'", organization.Name)
 			err := collect(&client, organization)
+			
 			if err != nil {
 				done <- err
 				return
 			}
 		}
+
+		readyMutex.Lock()
+		ready = true
+		readyMutex.Unlock()
 		time.Sleep(requestInterval)
 	}
 }
