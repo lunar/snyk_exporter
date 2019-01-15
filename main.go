@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 	"strconv"
+	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -41,6 +42,10 @@ var (
 	version = ""
 )
 
+var (
+	readyMutex = &sync.RWMutex{}
+)
+
 func main() {
 	flags := kingpin.New("snyk_exporter", "Snyk exporter for Prometheus. Provide your Snyk API token and the organization(s) to scrape to expose Prometheus metrics.")
 	snykAPIURL := flags.Flag("snyk.api-url", "Snyk API URL").Default("https://snyk.io/api/v1").String()
@@ -64,11 +69,20 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "true")
+		fmt.Fprintf(w, "healthy")
 	})
 
 	http.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "%q", strconv.FormatBool(ready))
+		readyMutex.RLock()
+
+		if ready == true {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			w.WriteHeader(http.StatusServiceUnavailable )
+		}
+
+		w.Write([]byte(strconv.FormatBool(ready)))
+		readyMutex.RUnlock()
 	})
 
 	done := make(chan error, 1)
@@ -121,12 +135,15 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 		for _, organization := range organizations {
 			log.Debugf("Collecting for organization '%s'", organization.Name)
 			err := collect(&client, organization)
-			log.Infof("Done collecting for organization '%s'", organization.Name)
-			ready = true
+			
 			if err != nil {
 				done <- err
 				return
 			}
+
+			readyMutex.Lock()
+			ready = true
+			readyMutex.Unlock()
 		}
 		time.Sleep(requestInterval)
 	}
