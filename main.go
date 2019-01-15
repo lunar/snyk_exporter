@@ -36,14 +36,11 @@ var (
 
 var (
 	ready = false
+	readyMutex = &sync.RWMutex{}
 )
 
 var (
 	version = ""
-)
-
-var (
-	readyMutex = &sync.RWMutex{}
 )
 
 func main() {
@@ -74,6 +71,7 @@ func main() {
 
 	http.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
 		readyMutex.RLock()
+		defer readyMutex.RUnlock()
 
 		if ready == true {
 			w.WriteHeader(http.StatusOK)
@@ -82,7 +80,6 @@ func main() {
 		}
 
 		w.Write([]byte(strconv.FormatBool(ready)))
-		readyMutex.RUnlock()
 	})
 
 	done := make(chan error, 1)
@@ -142,8 +139,8 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 			}
 
 			readyMutex.Lock()
+			defer readyMutex.Unlock()
 			ready = true
-			readyMutex.Unlock()
 		}
 		time.Sleep(requestInterval)
 	}

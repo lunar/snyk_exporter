@@ -145,8 +145,8 @@ kubectl apply -f examples/deployment.yaml
 ```
 
 The exporter expose http endpoints that can be used by kubernetes probes:
-* `/healthz` - used for liveness probe, always returns true
-* `/ready` - used for readiness probe, return true after the first scrape completed.
+* `/healthz` - used for liveness probe, always returns `healthy`, status code 200.
+* `/ready` - used for readiness probe, return `true` and status code 200 after the first scrape completed. Otherwise, it returns `false`, with status code 503.
 
 # Development
 

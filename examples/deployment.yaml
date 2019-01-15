@@ -35,7 +35,7 @@ spec:
           httpGet:
             path: /ready
             port: 9532
-          initialDelaySeconds: 60
+          initialDelaySeconds: 5
           periodSeconds: 30
           failureThreshold: 5
         ports:
