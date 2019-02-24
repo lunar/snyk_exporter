@@ -6,11 +6,11 @@ import (
 	neturl "net/url"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
-	"strconv"
-	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -36,7 +36,7 @@ var (
 )
 
 var (
-	ready = false
+	ready      = false
 	readyMutex = &sync.RWMutex{}
 )
 
@@ -77,7 +77,7 @@ func main() {
 		if ready == true {
 			w.WriteHeader(http.StatusOK)
 		} else {
-			w.WriteHeader(http.StatusServiceUnavailable )
+			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 
 		w.Write([]byte(strconv.FormatBool(ready)))
