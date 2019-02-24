@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -132,10 +133,13 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 		for _, organization := range organizations {
 			log.Debugf("Collecting for organization '%s'", organization.Name)
 			err := collect(&client, organization)
-			
 			if err != nil {
-				done <- err
-				return
+				httpErr, ok := err.(*neturl.Error)
+				if !ok || !httpErr.Timeout() {
+					done <- err
+					return
+				}
+				log.Errorf("Collection failed for organization '%s' due timeout", organization.Name)
 			}
 		}
 
