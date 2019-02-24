@@ -121,8 +121,8 @@ func TestRunAPIPolling_issuesTimeout(t *testing.T) {
 				"orgs": [{
 					"id": "id",
 					"name": "name"
-					}]
-					}`))
+				}]
+			}`))
 			return
 		}
 		time.Sleep(1 * time.Second)
