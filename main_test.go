@@ -1,9 +1,12 @@
 package main
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 )
 
 func TestAggregateVulnerabilities(t *testing.T) {
@@ -105,5 +108,36 @@ func TestAggregateVulnerabilities(t *testing.T) {
 				t.Errorf("Aggregates are not matching expectations: expected %v got %v", tc.aggregates, output)
 			}
 		})
+	}
+}
+
+func TestRunAPIPolling_issuesTimeout(t *testing.T) {
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		calls++
+		// allow organizations call to succeed
+		if calls == 1 {
+			rw.Write([]byte(`{
+				"orgs": [{
+					"id": "id",
+					"name": "name"
+				}]
+			}`))
+			return
+		}
+		time.Sleep(1 * time.Second)
+		rw.WriteHeader(http.StatusOK)
+	}))
+	done := make(chan error, 1)
+
+	go runAPIPolling(done, server.URL, "token", nil, 20*time.Millisecond, 1*time.Millisecond)
+
+	select {
+	case result := <-done:
+		if result != nil {
+			t.Errorf("unexpected error result: %v", result)
+		}
+	case <-time.After(100 * time.Millisecond):
+		// success path if timeout errors are suppressed
 	}
 }
