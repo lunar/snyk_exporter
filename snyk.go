@@ -54,6 +54,7 @@ func (c *client) getProjects(organization string) (projectsResponse, error) {
 func (c *client) getIssues(organizationID, projectID string) (issuesResponse, error) {
 	postData := issuesPostData{
 		Filters: issueFilters{
+			Ignored: false,
 			Severities: []string{
 				"high", "medium", "low",
 			},
@@ -65,6 +66,8 @@ func (c *client) getIssues(organizationID, projectID string) (issuesResponse, er
 		return issuesResponse{}, err
 	}
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/org/%s/project/%s/issues", c.baseURL, organizationID, projectID), &reader)
+	req.Header.Add("Content-Type", "application/json")
+
 	if err != nil {
 		return issuesResponse{}, err
 	}
@@ -154,6 +157,6 @@ type issuesPostData struct {
 type issueFilters struct {
 	Severities []string `json:"severities,omitempty"`
 	Types      []string `json:"types,omitempty"`
-	Ignored    bool     `json:"ignored,omitempty"`
+	Ignored    bool     `json:"ignored"`
 	Patched    bool     `json:"patched,omitempty"`
 }
