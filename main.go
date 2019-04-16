@@ -23,6 +23,7 @@ const (
 	issueTitleLabel   = "issue_title"
 	severityLabel     = "severity"
 	organizationLabel = "organization"
+	ignoredLabel      = "ignored"
 )
 
 var (
@@ -31,7 +32,7 @@ var (
 			Name: "snyk_vulnerabilities_total",
 			Help: "Gauge of Snyk vulnerabilities",
 		},
-		[]string{organizationLabel, projectLabel, issueTitleLabel, severityLabel},
+		[]string{organizationLabel, projectLabel, issueTitleLabel, severityLabel, ignoredLabel},
 	)
 )
 
@@ -208,18 +209,19 @@ func collect(client *client, organization org) error {
 
 func setGauge(organization, project string, results []aggregateResult) {
 	for _, result := range results {
-		vulnerabilityGauge.WithLabelValues(organization, project, result.title, result.severity).Set(float64(result.count))
+		vulnerabilityGauge.WithLabelValues(organization, project, result.title, result.severity, fmt.Sprintf("%t", result.ignored)).Set(float64(result.count))
 	}
 }
 
 type aggregateResult struct {
 	title    string
 	severity string
+	ignored  bool
 	count    int
 }
 
 func aggregationKey(vulnerability vulnerability) string {
-	return fmt.Sprintf("%s_%s", vulnerability.Severity, vulnerability.Title)
+	return fmt.Sprintf("%s_%s_%t", vulnerability.Severity, vulnerability.Title, vulnerability.Ignored)
 }
 func aggregateVulnerabilities(issues issues) []aggregateResult {
 	aggregateResults := make(map[string]aggregateResult)
@@ -234,6 +236,7 @@ func aggregateVulnerabilities(issues issues) []aggregateResult {
 				title:    vulnerability.Title,
 				severity: vulnerability.Severity,
 				count:    0,
+				ignored:  vulnerability.Ignored,
 			}
 		}
 		aggregate.count++

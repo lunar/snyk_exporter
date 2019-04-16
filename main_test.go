@@ -13,7 +13,15 @@ func TestAggregateVulnerabilities(t *testing.T) {
 	vulnerabilities := func(vulnerabilities ...vulnerability) []vulnerability {
 		return vulnerabilities
 	}
-	vulnerability := func(id, severity, title string) vulnerability {
+	ignoredVuln := func(id, severity, title string) vulnerability {
+		return vulnerability{
+			ID:       id,
+			Severity: severity,
+			Title:    title,
+			Ignored:  true,
+		}
+	}
+	vuln := func(id, severity, title string) vulnerability {
 		return vulnerability{
 			ID:       id,
 			Severity: severity,
@@ -23,11 +31,12 @@ func TestAggregateVulnerabilities(t *testing.T) {
 	aggregateResults := func(aggregateResults ...aggregateResult) []aggregateResult {
 		return aggregateResults
 	}
-	result := func(severity, title string, count int) aggregateResult {
+	result := func(severity, title string, count int, ignored bool) aggregateResult {
 		return aggregateResult{
 			severity: severity,
 			title:    title,
 			count:    count,
+			ignored:  ignored,
 		}
 	}
 	tt := []struct {
@@ -45,46 +54,72 @@ func TestAggregateVulnerabilities(t *testing.T) {
 		{
 			name: "single vulnerabilities",
 			issues: issues{
-				Vulnerabilities: vulnerabilities(vulnerability("vul-1", "high", "DDoS")),
+				Vulnerabilities: vulnerabilities(vuln("vul-1", "high", "DDoS")),
 			},
-			aggregates: aggregateResults(result("high", "DDoS", 1)),
+			aggregates: aggregateResults(result("high", "DDoS", 1, false)),
 		},
 		{
 			name: "multiple of different severity and same title",
 			issues: issues{
 				Vulnerabilities: vulnerabilities(
-					vulnerability("vul-1", "high", "DDoS"),
-					vulnerability("vul-2", "low", "DDoS"),
+					vuln("vul-1", "high", "DDoS"),
+					vuln("vul-2", "low", "DDoS"),
 				),
 			},
 			aggregates: aggregateResults(
-				result("high", "DDoS", 1),
-				result("low", "DDoS", 1),
+				result("high", "DDoS", 1, false),
+				result("low", "DDoS", 1, false),
 			),
 		},
 		{
 			name: "multiple of same severity and title",
 			issues: issues{
 				Vulnerabilities: vulnerabilities(
-					vulnerability("vul-1", "high", "DDoS"),
-					vulnerability("vul-2", "high", "DDoS"),
+					vuln("vul-1", "high", "DDoS"),
+					vuln("vul-2", "high", "DDoS"),
 				),
 			},
 			aggregates: aggregateResults(
-				result("high", "DDoS", 2),
+				result("high", "DDoS", 2, false),
+			),
+		},
+		{
+			name: "multiple of same severity and title but some ignored",
+			issues: issues{
+				Vulnerabilities: vulnerabilities(
+					vuln("vul-1", "high", "DDoS"),
+					ignoredVuln("vul-2", "high", "DDoS"),
+				),
+			},
+			aggregates: aggregateResults(
+				result("high", "DDoS", 1, false),
+				result("high", "DDoS", 1, true),
 			),
 		},
 		{
 			name: "multiple of same severity different title",
 			issues: issues{
 				Vulnerabilities: vulnerabilities(
-					vulnerability("vul-1", "high", "DDoS"),
-					vulnerability("vul-2", "high", "ReDoS"),
+					vuln("vul-1", "high", "DDoS"),
+					vuln("vul-2", "high", "ReDoS"),
 				),
 			},
 			aggregates: aggregateResults(
-				result("high", "DDoS", 1),
-				result("high", "ReDoS", 1),
+				result("high", "DDoS", 1, false),
+				result("high", "ReDoS", 1, false),
+			),
+		},
+		{
+			name: "multiple of same severity different title some ignored",
+			issues: issues{
+				Vulnerabilities: vulnerabilities(
+					vuln("vul-1", "high", "DDoS"),
+					ignoredVuln("vul-2", "high", "ReDoS"),
+				),
+			},
+			aggregates: aggregateResults(
+				result("high", "DDoS", 1, false),
+				result("high", "ReDoS", 1, true),
 			),
 		},
 	}
@@ -99,10 +134,15 @@ func TestAggregateVulnerabilities(t *testing.T) {
 			// sort as aggregateVulnerabilities does not provide a stable ordered
 			// slice
 			sort.Slice(output, func(i, j int) bool {
-				return output[i].title < output[j].title
-			})
-			sort.Slice(output, func(i, j int) bool {
-				return output[i].severity < output[j].severity
+				return aggregationKey(vulnerability{
+					Severity: output[i].severity,
+					Title:    output[i].title,
+					Ignored:  output[i].ignored,
+				}) < aggregationKey(vulnerability{
+					Severity: output[j].severity,
+					Title:    output[j].title,
+					Ignored:  output[j].ignored,
+				})
 			})
 			if !reflect.DeepEqual(output, tc.aggregates) {
 				t.Errorf("Aggregates are not matching expectations: expected %v got %v", tc.aggregates, output)
