@@ -144,6 +144,7 @@ type vulnerability struct {
 	ID       string `json:"id,omitempty"`
 	Severity string `json:"severity,omitempty"`
 	Title    string `json:"title,omitempty"`
+	Ignored  bool   `json:"isIgnored"`
 }
 
 type license struct{}
