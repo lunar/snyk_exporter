@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	neturl "net/url"
 	"os"
@@ -136,11 +137,18 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 			err := collect(&client, organization)
 			if err != nil {
 				httpErr, ok := err.(*neturl.Error)
-				if !ok || !httpErr.Timeout() {
-					done <- err
-					return
+				if ok {
+					if httpErr.Timeout() {
+						log.Errorf("Collection failed for organization '%s' due timeout", organization.Name)
+						continue
+					}
+					if httpErr.Err == io.ErrUnexpectedEOF {
+						log.Errorf("Collection failed for organization '%s' due to unexpected EOF", organization.Name)
+						continue
+					}
 				}
-				log.Errorf("Collection failed for organization '%s' due timeout", organization.Name)
+				done <- err
+				return
 			}
 		}
 
