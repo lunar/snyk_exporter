@@ -34,7 +34,7 @@ See all configuration options with the `--help` flag
 $ snyk_exporter --help
 usage: snyk_exporter --snyk.api-token=SNYK.API-TOKEN [<flags>]
 
-Snyk exporter for Prometheus. Provide your Snyk API token and optionally the organization id(s) to scrape to expose Prometheus metrics.
+Snyk exporter for Prometheus. Provide your Snyk API token and the organization(s) to scrape to expose Prometheus metrics.
 
 Flags:
   -h, --help              Show context-sensitive help (also try --help-long and --help-man).
