@@ -25,6 +25,8 @@ const (
 	severityLabel     = "severity"
 	organizationLabel = "organization"
 	ignoredLabel      = "ignored"
+	upgradeableLabel  = "upgradeable"
+	patchableLabel    = "patchable"
 )
 
 var (
@@ -33,7 +35,7 @@ var (
 			Name: "snyk_vulnerabilities_total",
 			Help: "Gauge of Snyk vulnerabilities",
 		},
-		[]string{organizationLabel, projectLabel, issueTitleLabel, severityLabel, ignoredLabel},
+		[]string{organizationLabel, projectLabel, issueTitleLabel, severityLabel, ignoredLabel, upgradeableLabel, patchableLabel},
 	)
 )
 
@@ -217,19 +219,25 @@ func collect(client *client, organization org) error {
 
 func setGauge(organization, project string, results []aggregateResult) {
 	for _, result := range results {
-		vulnerabilityGauge.WithLabelValues(organization, project, result.title, result.severity, fmt.Sprintf("%t", result.ignored)).Set(float64(result.count))
+		vulnerabilityGauge.WithLabelValues(organization, project, result.title, result.severity, boolStr(result.ignored), boolStr(result.upgradeable), boolStr(result.patchable)).Set(float64(result.count))
 	}
 }
 
+func boolStr(b bool) string {
+	return fmt.Sprintf("%t", b)
+}
+
 type aggregateResult struct {
-	title    string
-	severity string
-	ignored  bool
-	count    int
+	title       string
+	severity    string
+	ignored     bool
+	upgradeable bool
+	patchable   bool
+	count       int
 }
 
 func aggregationKey(vulnerability vulnerability) string {
-	return fmt.Sprintf("%s_%s_%t", vulnerability.Severity, vulnerability.Title, vulnerability.Ignored)
+	return fmt.Sprintf("%s_%s_%t_%t_%t", vulnerability.Severity, vulnerability.Title, vulnerability.Ignored, vulnerability.Upgradeable, vulnerability.Patchable)
 }
 func aggregateVulnerabilities(issues issues) []aggregateResult {
 	aggregateResults := make(map[string]aggregateResult)
@@ -241,10 +249,12 @@ func aggregateVulnerabilities(issues issues) []aggregateResult {
 		aggregate, ok := aggregateResults[aggregationKey(vulnerability)]
 		if !ok {
 			aggregate = aggregateResult{
-				title:    vulnerability.Title,
-				severity: vulnerability.Severity,
-				count:    0,
-				ignored:  vulnerability.Ignored,
+				title:       vulnerability.Title,
+				severity:    vulnerability.Severity,
+				count:       0,
+				ignored:     vulnerability.Ignored,
+				upgradeable: vulnerability.Upgradeable,
+				patchable:   vulnerability.Patchable,
 			}
 		}
 		aggregate.count++
