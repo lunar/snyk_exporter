@@ -233,7 +233,7 @@ func register(results []gaugeResult) {
 	vulnerabilityGauge.Reset()
 	for _, r := range results {
 		for _, result := range r.results {
-			vulnerabilityGauge.WithLabelValues(r.organization, r.project, result.title, result.severity, boolStr(result.ignored), boolStr(result.upgradeable), boolStr(result.patchable)).Set(float64(result.count))
+			vulnerabilityGauge.WithLabelValues(r.organization, r.project, result.title, result.severity, strconv.FormatBool(result.ignored), strconv.FormatBool(result.upgradeable), strconv.FormatBool(result.patchable)).Set(float64(result.count))
 		}
 	}
 }
@@ -268,10 +268,6 @@ func collect(client *client, organization org) ([]gaugeResult, error) {
 		log.Debugf("Collected data in %v for %s %s", duration, project.ID, project.Name)
 	}
 	return gaugeResults, nil
-}
-
-func boolStr(b bool) string {
-	return fmt.Sprintf("%t", b)
 }
 
 type aggregateResult struct {
