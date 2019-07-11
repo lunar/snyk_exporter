@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	neturl "net/url"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -174,7 +174,7 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 func poll(organization org, collector func(org) error) error {
 	err := collector(organization)
 	if err != nil {
-		httpErr, ok := err.(*neturl.Error)
+		httpErr, ok := err.(*url.Error)
 		if ok {
 			if httpErr.Timeout() {
 				log.Errorf("Collection failed for organization '%s' due timeout", organization.Name)
