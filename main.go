@@ -40,8 +40,9 @@ var (
 )
 
 var (
-	ready      = false
-	readyMutex = &sync.RWMutex{}
+	ready       = false
+	readyMutex  = &sync.RWMutex{}
+	scrapeMutex = &sync.RWMutex{}
 )
 
 var (
@@ -68,7 +69,13 @@ func main() {
 	}
 
 	prometheus.MustRegister(vulnerabilityGauge)
-	http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/metrics", promhttp.InstrumentMetricHandler(
+		prometheus.DefaultRegisterer, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			scrapeMutex.RLock()
+			defer scrapeMutex.RUnlock()
+			promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}).ServeHTTP(rw, r)
+		}),
+	))
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "healthy")
@@ -134,17 +141,27 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 	}
 	log.Infof("Running Snyk API scraper for organizations: %v", strings.Join(organizationNames(organizations), ", "))
 	for {
+		var gaugeResults []gaugeResult
 		for _, organization := range organizations {
 			log.Debugf("Collecting for organization '%s'", organization.Name)
+			var results []gaugeResult
 			err := poll(organization, func(organization org) error {
-				return collect(&client, organization)
+				var err error
+				results, err = collect(&client, organization)
+				if err != nil {
+					return err
+				}
+				return nil
 			})
 			if err != nil {
 				done <- err
 				return
 			}
+			gaugeResults = append(gaugeResults, results...)
 		}
-
+		scrapeMutex.Lock()
+		register(gaugeResults)
+		scrapeMutex.Unlock()
 		readyMutex.Lock()
 		ready = true
 		readyMutex.Unlock()
@@ -208,12 +225,32 @@ func filterByIDs(organizations []org, ids []string) []org {
 	return filtered
 }
 
-func collect(client *client, organization org) error {
+// register registers results in the vulnerbility gauge. To handle changing
+// flags, e.g. ignored, upgradeable the metric is cleared before setting new
+// values.
+// See https://github.com/lunarway/snyk_exporter/issues/21 for details.
+func register(results []gaugeResult) {
+	vulnerabilityGauge.Reset()
+	for _, r := range results {
+		for _, result := range r.results {
+			vulnerabilityGauge.WithLabelValues(r.organization, r.project, result.title, result.severity, boolStr(result.ignored), boolStr(result.upgradeable), boolStr(result.patchable)).Set(float64(result.count))
+		}
+	}
+}
+
+type gaugeResult struct {
+	organization string
+	project      string
+	results      []aggregateResult
+}
+
+func collect(client *client, organization org) ([]gaugeResult, error) {
 	projects, err := client.getProjects(organization.ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	var gaugeResults []gaugeResult
 	for _, project := range projects.Projects {
 		start := time.Now()
 		issues, err := client.getIssues(organization.ID, project.ID)
@@ -222,17 +259,15 @@ func collect(client *client, organization org) error {
 			continue
 		}
 		results := aggregateVulnerabilities(issues.Issues)
-		setGauge(organization.Name, project.Name, results)
+		gaugeResults = append(gaugeResults, gaugeResult{
+			organization: organization.Name,
+			project:      project.Name,
+			results:      results,
+		})
 		duration := time.Since(start)
 		log.Debugf("Collected data in %v for %s %s", duration, project.ID, project.Name)
 	}
-	return nil
-}
-
-func setGauge(organization, project string, results []aggregateResult) {
-	for _, result := range results {
-		vulnerabilityGauge.WithLabelValues(organization, project, result.title, result.severity, boolStr(result.ignored), boolStr(result.upgradeable), boolStr(result.patchable)).Set(float64(result.count))
-	}
+	return gaugeResults, nil
 }
 
 func boolStr(b bool) string {
