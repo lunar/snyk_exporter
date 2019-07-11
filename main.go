@@ -136,19 +136,10 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 	for {
 		for _, organization := range organizations {
 			log.Debugf("Collecting for organization '%s'", organization.Name)
-			err := collect(&client, organization)
+			err := poll(organization, func(organization org) error {
+				return collect(&client, organization)
+			})
 			if err != nil {
-				httpErr, ok := err.(*neturl.Error)
-				if ok {
-					if httpErr.Timeout() {
-						log.Errorf("Collection failed for organization '%s' due timeout", organization.Name)
-						continue
-					}
-					if httpErr.Err == io.ErrUnexpectedEOF {
-						log.Errorf("Collection failed for organization '%s' due to unexpected EOF", organization.Name)
-						continue
-					}
-				}
 				done <- err
 				return
 			}
@@ -159,6 +150,27 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 		readyMutex.Unlock()
 		time.Sleep(requestInterval)
 	}
+}
+
+// poll polles the collector for new data. In case of errors it decides whether
+// to keep on polling or stop b y returning an error.
+func poll(organization org, collector func(org) error) error {
+	err := collector(organization)
+	if err != nil {
+		httpErr, ok := err.(*neturl.Error)
+		if ok {
+			if httpErr.Timeout() {
+				log.Errorf("Collection failed for organization '%s' due timeout", organization.Name)
+				return nil
+			}
+		}
+		if err == io.ErrUnexpectedEOF {
+			log.Errorf("Collection failed for organization '%s' due to unexpected EOF", organization.Name)
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 func organizationNames(orgs []org) []string {
