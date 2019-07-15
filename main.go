@@ -180,6 +180,10 @@ func poll(organization org, collector func(org) error) error {
 				log.Errorf("Collection failed for organization '%s' due timeout", organization.Name)
 				return nil
 			}
+			if httpErr.Err == io.ErrUnexpectedEOF {
+				log.Errorf("Collection failed for organization '%s' due to unexpected EOF", organization.Name)
+				return nil
+			}
 		}
 		if err == io.ErrUnexpectedEOF {
 			log.Errorf("Collection failed for organization '%s' due to unexpected EOF", organization.Name)
