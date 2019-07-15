@@ -176,6 +176,7 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 func poll(organization org, collector func(org) error) error {
 	err := collector(organization)
 	if err != nil {
+		err = errors.Cause(err)
 		httpErr, ok := err.(*url.Error)
 		if ok {
 			if httpErr.Timeout() {
