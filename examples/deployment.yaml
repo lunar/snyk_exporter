@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: snyk-exporter
-        image: quay.io/lunarway/snyk_exporter:v1.0.0
+        image: quay.io/lunarway/snyk_exporter:latest
         args: ["--snyk.api-token", "$(SNYK_API_TOKEN)", "--log.level", "debug"]
         env:
         - name: SNYK_API_TOKEN
