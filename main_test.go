@@ -215,6 +215,15 @@ func TestPoll(t *testing.T) {
 			},
 			output: nil,
 		},
+		{
+			name: "http unexpected EOF",
+			collectorErr: &url.Error{
+				Op:  "POST",
+				URL: "/url",
+				Err: io.ErrUnexpectedEOF,
+			},
+			output: nil,
+		},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
