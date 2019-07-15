@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
@@ -155,7 +156,7 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 				return nil
 			})
 			if err != nil {
-				done <- err
+				done <- errors.WithMessagef(err, "organization %s (%s)", organization.Name, organization.ID)
 				return
 			}
 			gaugeResults = append(gaugeResults, results...)
@@ -175,6 +176,7 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 func poll(organization org, collector func(org) error) error {
 	err := collector(organization)
 	if err != nil {
+		err = errors.Cause(err)
 		httpErr, ok := err.(*url.Error)
 		if ok {
 			if httpErr.Timeout() {
@@ -252,7 +254,7 @@ type gaugeResult struct {
 func collect(client *client, organization org) ([]gaugeResult, error) {
 	projects, err := client.getProjects(organization.ID)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "get projects for organization")
 	}
 
 	var gaugeResults []gaugeResult
