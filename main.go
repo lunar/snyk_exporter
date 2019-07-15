@@ -108,7 +108,8 @@ func main() {
 	go func() {
 		select {
 		case sig := <-sigs:
-			done <- fmt.Errorf("received os signal '%s'", sig)
+			log.Infof("Received os signal '%s'. Terminating...", sig)
+			done <- nil
 		}
 	}()
 
