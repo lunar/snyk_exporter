@@ -181,13 +181,3 @@ func TestRunAPIPolling_issuesTimeout(t *testing.T) {
 		// success path if timeout errors are suppressed
 	}
 }
-
-type timeoutError struct{}
-
-func (err *timeoutError) Timeout() bool {
-	return true
-}
-
-func (err *timeoutError) Error() string {
-	return "timeout error"
-}
