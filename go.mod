@@ -1,5 +1,7 @@
 module github.com/lunarway/snyk_exporter
 
+go 1.13
+
 require (
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
