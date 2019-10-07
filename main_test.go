@@ -1,11 +1,8 @@
 package main
 
 import (
-	"errors"
-	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"reflect"
 	"sort"
 	"testing"
@@ -183,78 +180,4 @@ func TestRunAPIPolling_issuesTimeout(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 		// success path if timeout errors are suppressed
 	}
-}
-
-func TestPoll(t *testing.T) {
-	tt := []struct {
-		name         string
-		collectorErr error
-		output       error
-	}{
-		{
-			name:         "no error",
-			collectorErr: nil,
-			output:       nil,
-		},
-		{
-			name:         "custom error",
-			collectorErr: errors.New("custom error"),
-			output:       errors.New("custom error"),
-		},
-		{
-			name:         "unexpected EOF",
-			collectorErr: io.ErrUnexpectedEOF,
-			output:       nil,
-		},
-		{
-			name: "http timeout",
-			collectorErr: &url.Error{
-				Op:  "POST",
-				URL: "/url",
-				Err: &timeoutError{},
-			},
-			output: nil,
-		},
-		{
-			name: "http unexpected EOF",
-			collectorErr: &url.Error{
-				Op:  "POST",
-				URL: "/url",
-				Err: io.ErrUnexpectedEOF,
-			},
-			output: nil,
-		},
-	}
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
-			o := org{
-				ID: tc.name,
-			}
-			err := poll(o, func(org) error {
-				return tc.collectorErr
-			})
-			if tc.output != nil {
-				if err == nil {
-					t.Fatalf("expected output error but got nil")
-				}
-				if tc.output.Error() != err.Error() {
-					t.Fatalf("expected error '%s' but got '%s'", tc.output.Error(), err.Error())
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected output error '%s'", err)
-			}
-		})
-	}
-}
-
-type timeoutError struct{}
-
-func (err *timeoutError) Timeout() bool {
-	return true
-}
-
-func (err *timeoutError) Error() string {
-	return "timeout error"
 }
