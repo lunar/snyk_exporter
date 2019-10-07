@@ -157,6 +157,7 @@ func TestRunAPIPolling_issuesTimeout(t *testing.T) {
 		calls++
 		// allow organizations call to succeed
 		if calls == 1 {
+			//nolint:errcheck
 			rw.Write([]byte(`{
 				"orgs": [{
 					"id": "id",
