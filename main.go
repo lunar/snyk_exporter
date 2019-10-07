@@ -84,13 +84,16 @@ func main() {
 		readyMutex.RLock()
 		defer readyMutex.RUnlock()
 
-		if ready == true {
+		if ready {
 			w.WriteHeader(http.StatusOK)
 		} else {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 
-		w.Write([]byte(strconv.FormatBool(ready)))
+		_, err := w.Write([]byte(strconv.FormatBool(ready)))
+		if err != nil {
+			log.With("error", err).Errorf("Failed to write ready response: %v", err)
+		}
 	})
 
 	done := make(chan error, 1)
@@ -105,11 +108,9 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		select {
-		case sig := <-sigs:
-			log.Infof("Received os signal '%s'. Terminating...", sig)
-			done <- nil
-		}
+		sig := <-sigs
+		log.Infof("Received os signal '%s'. Terminating...", sig)
+		done <- nil
 	}()
 
 	go runAPIPolling(done, *snykAPIURL, *snykAPIToken, *snykOrganizations, secondDuration(*snykInterval), secondDuration(*requestTimeout))
