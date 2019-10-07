@@ -146,7 +146,7 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 			log.Debugf("Collecting for organization '%s'", organization.Name)
 			results, err := collect(&client, organization)
 			if err != nil {
-				log.With("error", err).
+				log.With("error", errors.Cause(err)).
 					With("organzationName", organization.Name).
 					With("organzationId", organization.ID).
 					Errorf("Collection failed for organization '%s': %v", organization.Name, err)
