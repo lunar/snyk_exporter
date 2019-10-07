@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -146,18 +144,13 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 		var gaugeResults []gaugeResult
 		for _, organization := range organizations {
 			log.Debugf("Collecting for organization '%s'", organization.Name)
-			var results []gaugeResult
-			err := poll(organization, func(organization org) error {
-				var err error
-				results, err = collect(&client, organization)
-				if err != nil {
-					return err
-				}
-				return nil
-			})
+			results, err := collect(&client, organization)
 			if err != nil {
-				done <- errors.WithMessagef(err, "organization %s (%s)", organization.Name, organization.ID)
-				return
+				log.With("error", err).
+					With("organzationName", organization.Name).
+					With("organzationId", organization.ID).
+					Errorf("Collection failed for organization '%s': %v", organization.Name, err)
+				continue
 			}
 			gaugeResults = append(gaugeResults, results...)
 		}
@@ -169,32 +162,6 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 		readyMutex.Unlock()
 		time.Sleep(requestInterval)
 	}
-}
-
-// poll polles the collector for new data. In case of errors it decides whether
-// to keep on polling or stop b y returning an error.
-func poll(organization org, collector func(org) error) error {
-	err := collector(organization)
-	if err != nil {
-		err = errors.Cause(err)
-		httpErr, ok := err.(*url.Error)
-		if ok {
-			if httpErr.Timeout() {
-				log.Errorf("Collection failed for organization '%s' due timeout", organization.Name)
-				return nil
-			}
-			if httpErr.Err == io.ErrUnexpectedEOF {
-				log.Errorf("Collection failed for organization '%s' due to unexpected EOF", organization.Name)
-				return nil
-			}
-		}
-		if err == io.ErrUnexpectedEOF {
-			log.Errorf("Collection failed for organization '%s' due to unexpected EOF", organization.Name)
-			return nil
-		}
-		return err
-	}
-	return nil
 }
 
 func organizationNames(orgs []org) []string {
