@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
@@ -147,7 +147,7 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 			log.Debugf("Collecting for organization '%s'", organization.Name)
 			results, err := collect(&client, organization)
 			if err != nil {
-				log.With("error", errors.Cause(err)).
+				log.With("error", errors.Unwrap(err)).
 					With("organzationName", organization.Name).
 					With("organzationId", organization.ID).
 					Errorf("Collection failed for organization '%s': %v", organization.Name, err)
@@ -222,7 +222,7 @@ type gaugeResult struct {
 func collect(client *client, organization org) ([]gaugeResult, error) {
 	projects, err := client.getProjects(organization.ID)
 	if err != nil {
-		return nil, errors.WithMessage(err, "get projects for organization")
+		return nil, fmt.Errorf("get projects for organization: %w", err)
 	}
 
 	var gaugeResults []gaugeResult
