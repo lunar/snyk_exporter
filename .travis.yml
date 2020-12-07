@@ -1,6 +1,6 @@
 language: go
 go:
-- "1.13.1"
+- "1.15.6"
 script:
 - go build ./...
 - go test ./...
