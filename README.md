@@ -37,21 +37,22 @@ usage: snyk_exporter --snyk.api-token=SNYK.API-TOKEN [<flags>]
 Snyk exporter for Prometheus. Provide your Snyk API token and the organization(s) to scrape to expose Prometheus metrics.
 
 Flags:
-  -h, --help              Show context-sensitive help (also try --help-long and --help-man).
+  -h, --help               Show context-sensitive help (also try --help-long and --help-man).
       --snyk.api-url="https://snyk.io/api/v1"
-                          Snyk API URL
+                           Snyk API URL
       --snyk.api-token=SNYK.API-TOKEN
-                          Snyk API token
-  -i, --snyk.interval=60  Polling interval for requesting data from Snyk API in seconds
+                           Snyk API token
+  -i, --snyk.interval=600  Polling interval for requesting data from Snyk API in seconds
       --snyk.organization=SNYK.ORGANIZATION ...
-                          Snyk organization ID to scrape projects from (can be repeated for multiple organizations)
-      --snyk.timeout=10   Timeout for requests against Snyk API
+                           Snyk organization ID to scrape projects from (can be repeated for multiple organizations)
+      --snyk.timeout=10    Timeout for requests against Snyk API
       --web.listen-address=":9532"
-                          Address on which to expose metrics.
-      --log.level="info"  Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal]
+                           Address on which to expose metrics.
+      --log.level="info"   Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal]
       --log.format="logger:stderr"
-                          Set the log target and format. Example: "logger:syslog?appname=bob&local=7" or "logger:stdout?json=true"
-      --version           Show application version.
+                           Set the log target and format. Example: "logger:syslog?appname=bob&local=7" or "logger:stdout?json=true"
+      --version            Show application version.
+
 ```
 
 It is possible to use a file to pass arguments to the exporter.
@@ -66,7 +67,7 @@ And run the exporter using:
 
 # Design
 
-The exporter starts a long-running go routine on startup that scrapes the Snyk API with a fixed interval (default every `60` seconds).
+The exporter starts a long-running go routine on startup that scrapes the Snyk API with a fixed interval (default every `10` minutes).
 The interval can be configured as needed.
 
 The API results are aggregated and recorded on the `snyk_vulnerabiilities_total` metric with the following labels:
