@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"sort"
+	"sync"
 	"testing"
 	"time"
 )
@@ -169,16 +171,28 @@ func TestRunAPIPolling_issuesTimeout(t *testing.T) {
 		time.Sleep(1 * time.Second)
 		rw.WriteHeader(http.StatusOK)
 	}))
-	done := make(chan error, 1)
 
-	go runAPIPolling(done, server.URL, "token", nil, 20*time.Millisecond, 1*time.Millisecond)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	select {
-	case result := <-done:
-		if result != nil {
-			t.Errorf("unexpected error result: %v", result)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := runAPIPolling(ctx, server.URL, "token", nil, 20*time.Millisecond, 1*time.Millisecond)
+		if err != nil {
+			t.Errorf("unexpected error result: %v", err)
 		}
-	case <-time.After(100 * time.Millisecond):
-		// success path if timeout errors are suppressed
+	}()
+
+	// stop the polling again after 100ms
+	<-time.After(100 * time.Millisecond)
+	cancel()
+
+	// wait for the polling to stop
+	wg.Wait()
+
+	if !ready {
+		t.Fatalf("Ready not set but it should be")
 	}
 }
