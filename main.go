@@ -144,7 +144,7 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 	for {
 		var gaugeResults []gaugeResult
 		for _, organization := range organizations {
-			log.Debugf("Collecting for organization '%s'", organization.Name)
+			log.Infof("Collecting for organization '%s'", organization.Name)
 			results, err := collect(&client, organization)
 			if err != nil {
 				log.With("error", errors.Unwrap(err)).
@@ -153,8 +153,10 @@ func runAPIPolling(done chan error, url, token string, organizationIDs []string,
 					Errorf("Collection failed for organization '%s': %v", organization.Name, err)
 				continue
 			}
+			log.Infof("Recorded %d results for organization '%s'", len(results), organization.Name)
 			gaugeResults = append(gaugeResults, results...)
 		}
+		log.Infof("Exposing %d results as metrics", len(gaugeResults))
 		scrapeMutex.Lock()
 		register(gaugeResults)
 		scrapeMutex.Unlock()
