@@ -288,7 +288,7 @@ func collect(ctx context.Context, client *client, organization org) ([]gaugeResu
 			log.Errorf("Failed to get issues for organization %s (%s) and project %s (%s): %v", organization.Name, organization.ID, project.Name, project.ID, err)
 			continue
 		}
-		results := aggregateVulnerabilities(issues.Issues)
+		results := aggregateIssues(issues.Issues)
 		gaugeResults = append(gaugeResults, gaugeResult{
 			organization: organization.Name,
 			project:      project.Name,
@@ -317,45 +317,31 @@ type aggregateResult struct {
 	count       int
 }
 
-func aggregationKey(vulnerability vulnerability) string {
-	return fmt.Sprintf("%s_%s_%t_%t_%t", vulnerability.Severity, vulnerability.Title, vulnerability.Ignored, vulnerability.Upgradeable, vulnerability.Patchable)
+func aggregationKey(i issue) string {
+	return fmt.Sprintf("%s_%s_%t_%t_%t", i.IssueData.Severity, i.IssueData.Title, i.Ignored, i.FixInfo.Upgradeable, i.FixInfo.Patchable)
 }
-func aggregateVulnerabilities(issues issues) []aggregateResult {
+
+func aggregateIssues(issues []issue) []aggregateResult {
 	aggregateResults := make(map[string]aggregateResult)
-	// dedupe vulnerabilities - the snyk API reports vulnerabilities as
-	// separate if they are introduced via different top-level packages.
-	// we remove duplicate occurrences by comparing the ID.
-	vulnerabilities := dedupeVulnerabilities(issues.Vulnerabilities)
-	for _, vulnerability := range vulnerabilities {
-		aggregate, ok := aggregateResults[aggregationKey(vulnerability)]
+
+	for _, issue := range issues {
+		aggregate, ok := aggregateResults[aggregationKey(issue)]
 		if !ok {
 			aggregate = aggregateResult{
-				title:       vulnerability.Title,
-				severity:    vulnerability.Severity,
+				title:       issue.IssueData.Title,
+				severity:    issue.IssueData.Severity,
 				count:       0,
-				ignored:     vulnerability.Ignored,
-				upgradeable: vulnerability.Upgradeable,
-				patchable:   vulnerability.Patchable,
+				ignored:     issue.Ignored,
+				upgradeable: issue.FixInfo.Upgradeable,
+				patchable:   issue.FixInfo.Patchable,
 			}
 		}
 		aggregate.count++
-		aggregateResults[aggregationKey(vulnerability)] = aggregate
+		aggregateResults[aggregationKey(issue)] = aggregate
 	}
 	var output []aggregateResult
 	for i := range aggregateResults {
 		output = append(output, aggregateResults[i])
 	}
 	return output
-}
-
-func dedupeVulnerabilities(vulnerabilities []vulnerability) []vulnerability {
-	deduped := make(map[string]vulnerability)
-	for i := range vulnerabilities {
-		deduped[vulnerabilities[i].ID] = vulnerabilities[i]
-	}
-	var dedupedSlice []vulnerability
-	for _, vulnerability := range deduped {
-		dedupedSlice = append(dedupedSlice, vulnerability)
-	}
-	return dedupedSlice
 }
