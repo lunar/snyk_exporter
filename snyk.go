@@ -64,7 +64,7 @@ func (c *client) getIssues(organizationID, projectID string) (issuesResponse, er
 	if err != nil {
 		return issuesResponse{}, err
 	}
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/org/%s/project/%s/issues", c.baseURL, organizationID, projectID), &reader)
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/org/%s/project/%s/aggregated-issues", c.baseURL, organizationID, projectID), &reader)
 	if err != nil {
 		return issuesResponse{}, err
 	}
@@ -132,21 +132,25 @@ type project struct {
 }
 
 type issuesResponse struct {
-	Issues issues `json:"issues,omitempty"`
+	Issues []issue `json:"issues,omitempty"`
 }
 
-type issues struct {
-	Vulnerabilities []vulnerability `json:"vulnerabilities,omitempty"`
-	Licenses        []license       `json:"licenses,omitempty"`
+type issue struct {
+	ID        string    `json:"id,omitempty"`
+	IssueData issueData `json:"issueData,omitempty"`
+	Ignored   bool      `json:"isIgnored"`
+	FixInfo   fixInfo   `json:"fixInfo,omitempty"`
 }
 
-type vulnerability struct {
-	ID          string `json:"id,omitempty"`
-	Severity    string `json:"severity,omitempty"`
-	Title       string `json:"title,omitempty"`
-	Ignored     bool   `json:"isIgnored"`
-	Upgradeable bool   `json:"isUpgradable"`
-	Patchable   bool   `json:"isPatchable"`
+type issueData struct {
+	ID       string `json:"id,omitempty"`
+	Title    string `json:"title,omitempty"`
+	Severity string `json:"severity,omitempty"`
+}
+
+type fixInfo struct {
+	Upgradeable bool `json:"isUpgradable"`
+	Patchable   bool `json:"isPatchable"`
 }
 
 type license struct{}
