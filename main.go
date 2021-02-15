@@ -20,6 +20,7 @@ import (
 
 const (
 	projectLabel      = "project"
+	issueTypeLabel    = "issue_type"
 	issueTitleLabel   = "issue_title"
 	severityLabel     = "severity"
 	organizationLabel = "organization"
@@ -34,7 +35,7 @@ var (
 			Name: "snyk_vulnerabilities_total",
 			Help: "Gauge of Snyk vulnerabilities",
 		},
-		[]string{organizationLabel, projectLabel, issueTitleLabel, severityLabel, ignoredLabel, upgradeableLabel, patchableLabel},
+		[]string{organizationLabel, projectLabel, issueTypeLabel, issueTitleLabel, severityLabel, ignoredLabel, upgradeableLabel, patchableLabel},
 	)
 )
 
@@ -263,7 +264,7 @@ func register(results []gaugeResult) {
 	vulnerabilityGauge.Reset()
 	for _, r := range results {
 		for _, result := range r.results {
-			vulnerabilityGauge.WithLabelValues(r.organization, r.project, result.title, result.severity, strconv.FormatBool(result.ignored), strconv.FormatBool(result.upgradeable), strconv.FormatBool(result.patchable)).Set(float64(result.count))
+			vulnerabilityGauge.WithLabelValues(r.organization, r.project, result.issueType, result.title, result.severity, strconv.FormatBool(result.ignored), strconv.FormatBool(result.upgradeable), strconv.FormatBool(result.patchable)).Set(float64(result.count))
 		}
 	}
 }
@@ -309,6 +310,7 @@ func collect(ctx context.Context, client *client, organization org) ([]gaugeResu
 }
 
 type aggregateResult struct {
+	issueType   string
 	title       string
 	severity    string
 	ignored     bool
@@ -318,7 +320,7 @@ type aggregateResult struct {
 }
 
 func aggregationKey(i issue) string {
-	return fmt.Sprintf("%s_%s_%t_%t_%t", i.IssueData.Severity, i.IssueData.Title, i.Ignored, i.FixInfo.Upgradeable, i.FixInfo.Patchable)
+	return fmt.Sprintf("%s_%s_%s_%t_%t_%t", i.IssueData.Severity, i.IssueType, i.IssueData.Title, i.Ignored, i.FixInfo.Upgradeable, i.FixInfo.Patchable)
 }
 
 func aggregateIssues(issues []issue) []aggregateResult {
@@ -328,6 +330,7 @@ func aggregateIssues(issues []issue) []aggregateResult {
 		aggregate, ok := aggregateResults[aggregationKey(issue)]
 		if !ok {
 			aggregate = aggregateResult{
+				issueType:   issue.IssueType,
 				title:       issue.IssueData.Title,
 				severity:    issue.IssueData.Severity,
 				count:       0,

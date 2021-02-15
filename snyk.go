@@ -137,6 +137,7 @@ type issuesResponse struct {
 
 type issue struct {
 	ID        string    `json:"id,omitempty"`
+	IssueType string    `json:"issueType"`
 	IssueData issueData `json:"issueData,omitempty"`
 	Ignored   bool      `json:"isIgnored"`
 	FixInfo   fixInfo   `json:"fixInfo,omitempty"`
