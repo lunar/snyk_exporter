@@ -75,6 +75,7 @@ The API results are aggregated and recorded on the `snyk_vulnerabiilities_total`
 - `organization` - The organization where the vulnerable project exists
 - `project` - The project with a vulnerability
 - `severity` - The severity of the vulnerability, can be `high`, `medium` and `low`
+- `issue_type` - The type of issue, e.g. `vuln`, `license`
 - `issue_title` - The issue title of the vulnerability, e.g. `Denial os Service (DoS)`. Can be the CVE if the vulnerability is not named by Snyk
 - `ignored` - The issue is ignored in Snyk.
 - `upgradeable` - The issue can be fixed by upgrading to a later version of the dependency.
@@ -83,8 +84,9 @@ The API results are aggregated and recorded on the `snyk_vulnerabiilities_total`
 Here is an example.
 
 ```
-snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="high",issue_title="Privilege Escalation",ignored="false",upgradeable="false",patchable="false"} 1.0
-snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="low",issue_title="Sandbox (chroot) Escape",ignored="true",upgradeable="false",patchable="false"} 2.0
+snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="high",issue_type="vuln",issue_title="Privilege Escalation",ignored="false",upgradeable="false",patchable="false"} 1.0
+snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="low",issue_type="vuln",issue_title="Sandbox (chroot) Escape",ignored="true",upgradeable="false",patchable="false"} 2.0
+snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="medium",issue_type="license",issue_title="MPL-2.0 license",ignored="true",upgradeable="false",patchable="false"} 1
 ```
 
 # Build
