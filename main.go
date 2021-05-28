@@ -296,7 +296,7 @@ func collect(ctx context.Context, client *client, organization org) ([]gaugeResu
 			organization: organization.Name,
 			project:      project.Name,
 			results:      results,
-			isMonitored: project.IsMonitored,
+			isMonitored:  project.IsMonitored,
 		})
 		duration := time.Since(start)
 		log.Debugf("Collected data in %v for %s %s", duration, project.ID, project.Name)
