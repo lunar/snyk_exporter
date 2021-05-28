@@ -27,6 +27,7 @@ const (
 	ignoredLabel      = "ignored"
 	upgradeableLabel  = "upgradeable"
 	patchableLabel    = "patchable"
+	monitoredLabel    = "monitored"
 )
 
 var (
@@ -35,7 +36,7 @@ var (
 			Name: "snyk_vulnerabilities_total",
 			Help: "Gauge of Snyk vulnerabilities",
 		},
-		[]string{organizationLabel, projectLabel, issueTypeLabel, issueTitleLabel, severityLabel, ignoredLabel, upgradeableLabel, patchableLabel},
+		[]string{organizationLabel, projectLabel, issueTypeLabel, issueTitleLabel, severityLabel, ignoredLabel, upgradeableLabel, patchableLabel, monitoredLabel},
 	)
 )
 
@@ -264,7 +265,7 @@ func register(results []gaugeResult) {
 	vulnerabilityGauge.Reset()
 	for _, r := range results {
 		for _, result := range r.results {
-			vulnerabilityGauge.WithLabelValues(r.organization, r.project, result.issueType, result.title, result.severity, strconv.FormatBool(result.ignored), strconv.FormatBool(result.upgradeable), strconv.FormatBool(result.patchable)).Set(float64(result.count))
+			vulnerabilityGauge.WithLabelValues(r.organization, r.project, result.issueType, result.title, result.severity, strconv.FormatBool(result.ignored), strconv.FormatBool(result.upgradeable), strconv.FormatBool(result.patchable), strconv.FormatBool(r.isMonitored)).Set(float64(result.count))
 		}
 	}
 }
@@ -272,6 +273,7 @@ func register(results []gaugeResult) {
 type gaugeResult struct {
 	organization string
 	project      string
+	isMonitored  bool
 	results      []aggregateResult
 }
 
@@ -294,6 +296,7 @@ func collect(ctx context.Context, client *client, organization org) ([]gaugeResu
 			organization: organization.Name,
 			project:      project.Name,
 			results:      results,
+			isMonitored:  project.IsMonitored,
 		})
 		duration := time.Since(start)
 		log.Debugf("Collected data in %v for %s %s", duration, project.ID, project.Name)

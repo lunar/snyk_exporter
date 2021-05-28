@@ -80,13 +80,14 @@ The API results are aggregated and recorded on the `snyk_vulnerabiilities_total`
 - `ignored` - The issue is ignored in Snyk.
 - `upgradeable` - The issue can be fixed by upgrading to a later version of the dependency.
 - `patchable` - The issue is patchable through Snyk.
+- `monitored` - The project is actively monitored by Snyk.
 
 Here is an example.
 
 ```
-snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="high",issue_type="vuln",issue_title="Privilege Escalation",ignored="false",upgradeable="false",patchable="false"} 1.0
-snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="low",issue_type="vuln",issue_title="Sandbox (chroot) Escape",ignored="true",upgradeable="false",patchable="false"} 2.0
-snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="medium",issue_type="license",issue_title="MPL-2.0 license",ignored="true",upgradeable="false",patchable="false"} 1
+snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="high",issue_type="vuln",issue_title="Privilege Escalation",ignored="false",upgradeable="false",patchable="false",monitored="true"} 1.0
+snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="low",issue_type="vuln",issue_title="Sandbox (chroot) Escape",ignored="true",upgradeable="false",patchable="false",monitored="false"} 2.0
+snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="medium",issue_type="license",issue_title="MPL-2.0 license",ignored="true",upgradeable="false",patchable="false",monitored="true"} 1
 ```
 
 # Build
