@@ -13,7 +13,7 @@ Several pre-compiled binaries are available from the [releases page](https://git
 
 A docker image is also available on our Quay.io registry.
 
-```
+```bash
 docker run quay.io/lunarway/snyk_exporter --snyk.api-token <api-token>
 ```
 
@@ -24,13 +24,13 @@ Get your through the [Snyk account settings](https://app.snyk.io/account/).
 
 It exposes prometheus metrics on `/metrics` on port `9532` (can be configured).
 
-```
+```bash
 snyk_exporter --snyk.api-token <api-token>
 ```
 
 See all configuration options with the `--help` flag
 
-```
+```bash
 $ snyk_exporter --help
 usage: snyk_exporter --snyk.api-token=SNYK.API-TOKEN [<flags>]
 
@@ -57,11 +57,13 @@ Flags:
 
 It is possible to use a file to pass arguments to the exporter.
 For example:
-```
+
+```bash
  echo --snyk.api-token=<>\n > args
 ```
 And run the exporter using:
-```
+
+```bash
 ./snyk-exporter @args
 ```
 
@@ -109,8 +111,12 @@ This is useful if the exporter is to be depoyled in Kubernetes or other dockeriz
 
 Here is an example of running the exporter locally.
 
-```
-$ docker run -p9532:9532 snyk_exporter --snyk.api-token <api-token>
+```bash
+$ docker run \
+    -p9532:9532 \
+    --snyk.api-token <api-token> \
+    snyk_exporter
+
 time="2019-01-11T09:42:34Z" level=info msg="Starting Snyk exporter for all organization for token" source="main.go:55"
 time="2019-01-11T09:42:34Z" level=info msg="Listening on :9532" source="main.go:63"
 time="2019-01-11T09:42:35Z" level=info msg="Running Snyk API scraper for organizations: <omitted>" source="main.go:106"
@@ -160,8 +166,9 @@ Please do not forget to replace a text with your namespace name.
         - snyk-exporter.<your namespace name>:9532
 ```
 
+## Kubernetes deployment with all organization
 
-
+To deploy the exporter in Kubernetes, you can find a simple Kubernetes `deployment.yaml` and `secret yaml` in the `examples` folder. You have to add your **snyk token** in the `secrets.yaml` and/or the **snyk organizations** that you want to get metrics from in the args section of the `deployment.yaml`. If you don't specify a `snyk-organization`, the exporter will scrape all organizations the token provides access to. The example assumes that you have a namespace in kubernetes named: monitoring.
 
 It further assumes that you have [kubernetes service discovery](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config) configured for you Prometheus instance and a target that will gather metrics from pods, similar to this:
 
