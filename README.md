@@ -118,10 +118,36 @@ time="2019-01-11T09:42:35Z" level=info msg="Running Snyk API scraper for organiz
 
 # Deployment
 
-To deploy the exporter in Kubernetes, you can find a simple Kubernetes deployment and secret yaml in the `kubernetes-deplyoment/snyk-exporter` folder. You have to add your snyk token and the snyk organization in the `secrets.yaml`. You can configure the arguments in args section of the `deployment.yaml`. The deployment will be applied on your current namespace!
+## Simple Kubernetes deployment
 
-Prometheus scrape configuration:  
-Please do not forge to replace a text with your namespace name.
+To deploy the exporter in Kubernetes, you can find a simple Kubernetes deployment and secret yaml in the `deplyoments/kubernetes/snyk-exporter` folder. You have to add your snyk token and the snyk organization in the `secrets.yaml`. You can configure the arguments in args section of the `deployment.yaml`. The deployment will be applied on your current namespace!
+
+## Helm chart
+
+The helm chart placed in `deplyoments/helm/charts/snyk-exporter` folder. The configuration guide added to the `values.yaml`. Please apply your config separately and override it in Helm relese.
+
+Sample myvalues.yaml (store it separated place from chart)
+
+```yaml
+config:
+  snyk:
+    apiToken: <your Snyk service API token place as clear text >
+    organization: <Your Snyk organization ID place as clear text>
+
+service:
+  type: ClusterIP
+  port: 9532
+```
+
+Install helm chart
+
+```bash
+helm install -f myvalues.yaml snyk-exporter kubernetes-deplyoment/helm/charts/snyk-exporter/
+```
+
+## Prometheus scrape configuration
+
+Please do not forget to replace a text with your namespace name.
 
 ```yaml
 - job_name: snyk-metrics
@@ -133,6 +159,9 @@ Please do not forge to replace a text with your namespace name.
     - targets:
         - snyk-exporter.<your namespace name>:9532
 ```
+
+
+
 
 It further assumes that you have [kubernetes service discovery](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config) configured for you Prometheus instance and a target that will gather metrics from pods, similar to this:
 
