@@ -1,0 +1,16 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: snyk-exporter
+  labels:
+    name: snyk-exporter
+spec:
+  selector:
+    name: snyk-exporter
+  type: ClusterIP
+  ports:
+    - port: 9532
+      targetPort: 9532
+      protocol: TCP
+      name: http

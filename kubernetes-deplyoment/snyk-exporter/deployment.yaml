@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snyk-exporter
+  labels:
+    name: snyk-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: snyk-exporter
+  template:
+    metadata:
+      name: snyk-exporter
+      labels:
+        name: snyk-exporter
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9532'
+    spec:
+      containers:
+        - name: snyk-exporter
+          image: quay.io/lunarway/snyk_exporter:latest
+          imagePullPolicy: Always
+          args:
+            - "--snyk.api-token=$(SNYK_API_TOKEN)"
+            - "--snyk.organization=$(SNYK_ORGANIZATION)"
+            - "--log.level=debug"
+          env:
+            - name: SNYK_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: snyk.api-token
+                  name: snyk-exporter
+            - name: SNYK_ORGANIZATION
+              valueFrom:
+                secretKeyRef:
+                  key: snyk.organization
+                  name: snyk-exporter
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9532
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 9532
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            failureThreshold: 5
+          ports:
+            - name: http
+              containerPort: 9532
