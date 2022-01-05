@@ -126,7 +126,10 @@ time="2019-01-11T09:42:35Z" level=info msg="Running Snyk API scraper for organiz
 
 ## Simple Kubernetes deployment
 
-To deploy the exporter in Kubernetes, you can find a simple Kubernetes deployment and secret yaml in the `deployments/kubernetes/snyk-exporter` folder. You have to add your snyk token and the snyk organization in the `secrets.yaml`. You can configure the arguments in args section of the `deployment.yaml`. The deployment will be applied on your current namespace!
+To deploy the exporter in Kubernetes, you can find a simple Kubernetes deployment and secret yaml in the `deployments/kubernetes/snyk-exporter` folder.  
+You have to add your snyk token and the snyk organization in the `secrets.yaml`.  
+You can configure the arguments in args section of the `deployment.yaml`.  
+The deployment will be applied on your current namespace.
 
 To deploy it to your kubernetes cluster run the following commands:
 
@@ -138,9 +141,12 @@ kubectl apply -f deployments/kubernetes/snyk-exporter/service.yaml
 
 ## Helm chart
 
-The helm chart placed in `deployments/helm/charts/snyk-exporter` folder. The configuration guide added to the `values.yaml`. Please apply your config separately and override it in Helm relese.
+The helm chart placed in `deployments/helm/charts/snyk-exporter` folder. The configuration guide added to the `values.yaml`.  
+Please apply your config separately and override it in Helm relese.  
+The Helm deployment will be applied on your current namespace.
 
-Sample myvalues.yaml (store it separated place from chart)
+
+Sample `myvalues.yaml`
 
 ```yaml
 config:
@@ -156,13 +162,21 @@ service:
 Dry-run and debug helm chart (recommend before run the install command)
 
 ```bash
-helm install -f ~/myvalues.yaml snyk-exporter deployments/helm/charts/snyk-exporter/ --dry-run --debug
+helm install \
+  -f ~/myvalues.yaml \
+  snyk-exporter \
+  deployments/helm/charts/snyk-exporter/ \
+  --dry-run \
+  --debug
 ```
 
 Install helm chart
 
 ```bash
-helm install -f ~/myvalues.yaml snyk-exporter deployments/helm/charts/snyk-exporter/
+helm install \
+  -f ~/myvalues.yaml \
+  snyk-exporter \
+  deployments/helm/charts/snyk-exporter/
 ```
 
 ## Prometheus scrape configuration
