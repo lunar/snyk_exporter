@@ -74,7 +74,7 @@ The API results are aggregated and recorded on the `snyk_vulnerabiilities_total`
 
 - `organization` - The organization where the vulnerable project exists
 - `project` - The project with a vulnerability
-- `severity` - The severity of the vulnerability, can be `high`, `medium` and `low`
+- `severity` - The severity of the vulnerability, can be `critical`, `high`, `medium` and `low`
 - `issue_type` - The type of issue, e.g. `vuln`, `license`
 - `issue_title` - The issue title of the vulnerability, e.g. `Denial os Service (DoS)`. Can be the CVE if the vulnerability is not named by Snyk
 - `ignored` - The issue is ignored in Snyk.
@@ -85,6 +85,7 @@ The API results are aggregated and recorded on the `snyk_vulnerabiilities_total`
 Here is an example.
 
 ```
+snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="critical",issue_type="vuln",issue_title="Remote Code Execution",ignored="false",upgradeable="false",patchable="false",monitored="true"} 1.0
 snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="high",issue_type="vuln",issue_title="Privilege Escalation",ignored="false",upgradeable="false",patchable="false",monitored="true"} 1.0
 snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="low",issue_type="vuln",issue_title="Sandbox (chroot) Escape",ignored="true",upgradeable="false",patchable="false",monitored="false"} 2.0
 snyk_vulnerabilities_total{organization="my-org",project="my-app",severity="medium",issue_type="license",issue_title="MPL-2.0 license",ignored="true",upgradeable="false",patchable="false",monitored="true"} 1
@@ -98,7 +99,7 @@ The exporter can be build using the standard Go tool chain if you have it availa
 go build
 ```
 
-You can build inside a docker imagee as well.
+You can build inside a docker image as well.
 This produces a `snyk_exporter` image that can run with the binary as entry point.
 
 ```

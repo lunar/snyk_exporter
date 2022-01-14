@@ -55,7 +55,7 @@ func (c *client) getIssues(organizationID, projectID string) (issuesResponse, er
 	postData := issuesPostData{
 		Filters: issueFilters{
 			Severities: []string{
-				"high", "medium", "low",
+				"critical", "high", "medium", "low",
 			},
 		},
 	}
