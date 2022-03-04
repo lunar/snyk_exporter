@@ -1,14 +1,14 @@
 builds:
-- env:
-  - CGO_ENABLED=0
+  - env:
+      - CGO_ENABLED=0
 
 dockers:
-- dockerfile: Dockerfile-goreleaser
-  image_templates:
-  - "quay.io/lunarway/snyk_exporter:latest"
-  - "quay.io/lunarway/snyk_exporter:v{{ .Major }}"
-  - "quay.io/lunarway/snyk_exporter:v{{ .Major }}.{{ .Minor }}"
-  - "quay.io/lunarway/snyk_exporter:v{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+  - dockerfile: Dockerfile-goreleaser
+    image_templates:
+      - "quay.io/lunarway/snyk_exporter:latest"
+      - "quay.io/lunarway/snyk_exporter:v{{ .Major }}"
+      - "quay.io/lunarway/snyk_exporter:v{{ .Major }}.{{ .Minor }}"
+      - "quay.io/lunarway/snyk_exporter:v{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
 
 archives:
   - format: binary
@@ -20,7 +20,7 @@ archives:
       386: i386
 
 checksum:
-  name_template: '{{ .ProjectName }}-checksums.txt'
+  name_template: "{{ .ProjectName }}-checksums.txt"
 
 snapshot:
   name_template: "git-{{.Commit}}"
@@ -29,8 +29,4 @@ release:
   name_template: "v{{.Version}}"
 
 changelog:
-  sort: asc
-  filters:
-    exclude:
-    - '^docs:'
-    - '^test:'
+  skip: true
