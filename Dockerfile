@@ -1,4 +1,4 @@
-FROM golang:1.18.3 as builder
+FROM golang:1.18.5 as builder
 WORKDIR /src
 ENV CGO_ENABLED=0
 ENV GOOS=linux
