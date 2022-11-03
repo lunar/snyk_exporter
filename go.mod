@@ -5,8 +5,8 @@ go 1.17
 require (
 	github.com/alecthomas/units v0.0.0-20201120081800-1786d5ef83d4 // indirect
 	github.com/google/go-cmp v0.5.4 // indirect
-	github.com/prometheus/client_golang v1.8.0
-	github.com/prometheus/common v0.15.0
+	github.com/prometheus/client_golang v1.13.1
+	github.com/prometheus/common v0.37.0
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/stretchr/testify v1.6.1 // indirect
 	golang.org/x/sys v0.0.0-20201204225414-ed752295db88 // indirect
