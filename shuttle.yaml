@@ -1,0 +1,6 @@
+plan: false
+
+vars:
+  service: snyk_exporter
+  squad: gravity
+  domain: security-insights
