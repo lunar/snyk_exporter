@@ -52,11 +52,14 @@ func (c *client) getProjects(organization string) (projectsResponse, error) {
 }
 
 func (c *client) getIssues(organizationID, projectID string) (issuesResponse, error) {
+	// Getting latest issues for organization and project specified
 	postData := issuesPostData{
 		Filters: issueFilters{
+			Orgs: []string{organizationID},
 			Severities: []string{
 				"critical", "high", "medium", "low",
 			},
+			Projects: []string{projectID},
 		},
 	}
 	var reader bytes.Buffer
@@ -64,7 +67,7 @@ func (c *client) getIssues(organizationID, projectID string) (issuesResponse, er
 	if err != nil {
 		return issuesResponse{}, err
 	}
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/org/%s/project/%s/aggregated-issues", c.baseURL, organizationID, projectID), &reader)
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/reporting/issues/latest", c.baseURL), &reader)
 	if err != nil {
 		return issuesResponse{}, err
 	}
@@ -127,13 +130,14 @@ type projectOrg struct {
 }
 
 type project struct {
-	Name          string `json:"name,omitempty"`
-	ID            string `json:"id,omitempty"`
-	IsMonitored   bool   `json:"isMonitored,omitempty"`
+	Name        string `json:"name,omitempty"`
+	ID          string `json:"id,omitempty"`
+	IsMonitored bool   `json:"isMonitored,omitempty"`
 }
 
 type issuesResponse struct {
 	Issues []issue `json:"issues,omitempty"`
+	Total  int     `json:"total"`
 }
 
 type issue struct {
@@ -161,8 +165,10 @@ type issuesPostData struct {
 	Filters issueFilters `json:"filters,omitempty"`
 }
 type issueFilters struct {
+	Orgs       []string `json:"orgs"`
 	Severities []string `json:"severities,omitempty"`
 	Types      []string `json:"types,omitempty"`
+	Projects   []string `json:"projects"`
 	Ignored    bool     `json:"ignored,omitempty"`
 	Patched    bool     `json:"patched,omitempty"`
 }
