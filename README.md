@@ -1,4 +1,6 @@
-# Snyk exporter
+# Snyk exporter [Archived]
+
+**Note**: This project is no longer actively maintained and is therefore archived.
 
 [![Build Status](https://travis-ci.com/lunarway/snyk_exporter.svg?branch=master)](https://travis-ci.com/lunarway/snyk_exporter)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lunarway/snyk_exporter)](https://goreportcard.com/report/github.com/lunarway/snyk_exporter)
